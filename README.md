@@ -1,6 +1,6 @@
 # monitoring_microservices
 
-A REST server with Django framework creates an endpoint at the adress:
+A REST server with Django framework creates an endpoint at the address:
 
 ## Get ressources usage:
 http://127.0.0.1:8000/ressources-usage/
