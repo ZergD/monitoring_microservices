@@ -8,6 +8,18 @@ Developped with Python3.9 on Windows10. Tested only on Windows10. Should work on
 
 This section is for quickly setting everything up and make it run.
 
+After git clone. The first thing to do is pip install -r requirements.txt
+
+Please make sure you are using python 3.9+
+
+##### First launch - To launch the influx db
+
+docker pull influxdb
+
+Then, docker run -p 8086:8086 -v influxdb:/var/lib/influxdb2 influxdb
+
+##### First launch - To launch server rest
+
 ## Microservices
 
 ### Microservice n°1: the ressource_usage_collector
@@ -46,16 +58,30 @@ into a json.
 'wsl.exe': [0.03692514596289905, 0.0],
 'wslhost.exe': [0.031640821544883124, 0.0]}
 
+##### Get ressource by ip addresses
+
+There is a possibility to further filter ressource-usage by using an ipaddress
+It will give you the same output but for a specific ipaddress.
+
+Here is an example of a request. 
+
+response = requests.get("http://127.0.0.1:8000/ressources-usage/get-all/216-58-213-68")
+
+Note that the ip address has to be done with hyphens and not dots. It is then replaces on the server side.
+Been struggling with Django's regex url path matching. Hence the hyphens.
+
+##### Get detailed ressources
+
 To get a **detailed usage value**, ie, with history values, without the mean computes there is another endpoint:
 http://127.0.0.1:8000/ressources-usage/get-all-detailed
 
-At the current moment it returns the list of all the measurements for a given process, for the mem_usage ressource.
-I stopped this feature here because it doesnt make much sense to have all those measurements. The get-all with 
-the mean compute is good.
+At the current moment it returns the list of all the measurements for a given process, for the mem_usage ressource. I
+stopped this feature here because it doesnt make much sense to have all those measurements. The get-all with the mean
+compute is good.
 
 An exemple of the output is:
-{'AdAppMgrSvc.exe': [0.12842683941476413, 0.12847469737616335, 0.1279961177621713, 0.13799843169460493,
-0.13799843169460493, 0.13799843169460493, ... , 0.1386445141734942, 0.1386445141734942, 0.1386445141734942]}
+{'AdAppMgrSvc.exe': [0.12842683941476413, 0.12847469737616335, 0.1279961177621713, 0.13799843169460493, 0.13799843169460493, 0.13799843169460493, ... , 0.1386445141734942, 0.1386445141734942, 0.1386445141734942]
+}
 
 ## Get alarm
 
@@ -68,13 +94,11 @@ what color the alert is. Orange. Red.
 
 Docker information here
 
-To launch the influx db
-docker run -p 8086:8086 -v influxdb:/var/lib/influxdb2 influxdb
-
+To launch the influx db docker run -p 8086:8086 -v influxdb:/var/lib/influxdb2 influxdb
 
 ## Library Used
-* BDD=> influxDB
-Python client: library: influxdb-client
+
+* BDD=> influxDB Python client: library: influxdb-client
 
 * To create Python Daemon => https://pypi.org/project/python-daemon/
 
@@ -85,13 +109,13 @@ Python client: library: influxdb-client
 * Pour avoir Cpu/Mem Usage: psutil
 
 Idees pour Executer des taches periodiques:
+
 * Celery beat => too heavy framework
 * Using time.sleep => too simple ? not robust enough ?
 * Using threading.Timer
 * Using threading.Event
-https://medium.com/greedygame-engineering/an-elegant-way-to-run-periodic-tasks-in-python-61b7c477b679
+  https://medium.com/greedygame-engineering/an-elegant-way-to-run-periodic-tasks-in-python-61b7c477b679
 * ==> timeloop lib for periodic tasks.
-
 
 ## Improvement / Optimization Ideas
 
@@ -100,7 +124,7 @@ While working on the project. Those are the ideas I put on the side because I ha
 ### Improvement Ideas:
 
 * The InfluxDB allows to clean DATA if the DATA history is > 2 days. Didnt have time to configure it.
-* At the current moment, I compute the mean manually. The Flux language allows to easily query the InfluxDB, and it 
+* At the current moment, I compute the mean manually. The Flux language allows to easily query the InfluxDB, and it
   allows to use "mean" fonction. But didnt have time to make it work. Hence why i did it manually at the moment.
 * The microservices are started/stopped manually. We could start/stop then with some network calls.
 * Create another microservice only dedicated for prediction ? Use Keras to build a predictive model and train it.

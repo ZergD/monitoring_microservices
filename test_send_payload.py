@@ -16,6 +16,15 @@ def test_get_ressources_usage():
     pprint.pprint(json_response)
 
 
+def test_get_ressources_usage_with_ip_address():
+    response = requests.get("http://127.0.0.1:8000/ressources-usage/get-all/216-58-213-68")
+    print(response)
+    print("------------------")
+
+    json_response = response.json()
+    pprint.pprint(json_response)
+
+
 def test_get_ressources_usage_detailed():
     response = requests.get("http://127.0.0.1:8000/ressources-usage/get-all-detailed")
     print(response)
@@ -166,3 +175,4 @@ def test_get_data_from_influxdb(measurement_filter: str):
 
 test_get_ressources_usage()
 # test_get_ressources_usage_detailed()
+# test_get_ressources_usage_with_ip_address()

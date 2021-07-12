@@ -27,10 +27,32 @@ URL_DB = "http://localhost:8086"
 
 
 @api_view(['GET'])
+def monitoring_with_ip_address(request, ipaddress):
+    ipaddress = str(ipaddress).replace("-", ".")
+    # str_to_display = "Hello world from Django! id= " + ipaddress
+    # print(str_to_display)
+    # print("new ipaddress = ", ipaddress)
+    # return Response(str_to_display, status=status.HTTP_200_OK)
+
+    res = None
+    if request.method == "GET":
+        res_mem = get_data_from_influx_db("mem_usage_percent", ipaddress=ipaddress)
+        res_cpu = get_data_from_influx_db("cpu_usage_percent", ipaddress=ipaddress)
+
+        # here we merge both dictionnaries.
+        res = defaultdict(list)
+        for d in (res_mem, res_cpu):
+            for key, value in d.items():
+                res[key].append(value)
+
+    return Response(json.dumps(res), status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
 def monitoring(request):
     res = None
     if request.method == "GET":
-        res_mem = get_data_from_influx_db("mem_usage_percent")
+        res_mem = get_data_from_influx_db("mem_usage_percent", )
         res_cpu = get_data_from_influx_db("cpu_usage_percent")
 
         # here we merge both dictionnaries.
@@ -42,7 +64,7 @@ def monitoring(request):
     return Response(json.dumps(res), status=status.HTTP_200_OK)
 
 
-def get_data_from_influx_db(measurement_filter: str, detail_flag=False) -> json:
+def get_data_from_influx_db(measurement_filter: str, detail_flag=False, ipaddress=None) -> json:
     """
     This function queries the DB.
     Gathers, computes the mean of all values, and sorts all results
@@ -54,18 +76,26 @@ def get_data_from_influx_db(measurement_filter: str, detail_flag=False) -> json:
         print("Problem with measurement filter, has to be mem_usage_percent or cpu_usage_percent")
         return {"Fail": "problem with measurement filter"}
 
-    org = "myorg"
-    bucket = "monitoring"
-    token = "WaKfamDkoQH3xbcbJo221YouLyMyaWLfQwqObjXxtGVcednoNXqZ4HglpRS5JS_HueepINFfgBzCe1xzLcMT2A=="
-    client = InfluxDBClient(url="http://localhost:8086", token=token)
+    range_start = "-3h"
+    # org = "myorg"
+    # bucket = "monitoring"
+    # token = "WaKfamDkoQH3xbcbJo221YouLyMyaWLfQwqObjXxtGVcednoNXqZ4HglpRS5JS_HueepINFfgBzCe1xzLcMT2A=="
+    client = InfluxDBClient(url=URL_DB, token=TOKEN)
 
-    query = f'from (bucket: "monitoring")' \
-            f' |> range(start: -5m, stop: now())' \
-            f' |> filter(fn: (r) => r._measurement == "{measurement_filter}")' \
-            f' |> group(columns: ["process"])'
+    if ipaddress is None:
+        query = f'from (bucket: "monitoring")' \
+                f' |> range(start: {range_start}, stop: now())' \
+                f' |> filter(fn: (r) => r._measurement == "{measurement_filter}")' \
+                f' |> group(columns: ["process"])'
+    else:
+        query = f'from (bucket: "monitoring")' \
+                f' |> range(start: {range_start}, stop: now())' \
+                f' |> filter(fn: (r) => r._measurement == "{measurement_filter}")' \
+                f' |> filter(fn: (r) => r.ip == "{ipaddress}")' \
+                f' |> group(columns: ["process"])'
     print(query)
 
-    tables = client.query_api().query(query, org=org)
+    tables = client.query_api().query(query, org=ORG)
     # tables = client.query_api().query_data_frame(query, org=org)
 
     # here is the part where we iterate over the result query and construct a clean dict with all results.
@@ -191,4 +221,3 @@ def monitoring_with_details(request):
         #         res[key].append(value)
 
     return Response(res_mem, status=status.HTTP_200_OK)
-
