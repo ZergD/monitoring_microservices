@@ -18,7 +18,20 @@ docker pull influxdb
 
 Then, docker run -p 8086:8086 -v influxdb:/var/lib/influxdb2 influxdb
 
+The configuration of InfluxDB follows this:
+* ORG = "myorg"
+* BUCKET = "monitoring"
+* URL_DB = "http://localhost:8086"
+
+
 ##### First launch - To launch server rest
+
+python manage.py runserver
+
+##### First launch - To launch server rest
+
+Finally you can run the micro service: micro_service_ressource_usage_collector.py in order to start populating
+the DB
 
 ## Microservices
 

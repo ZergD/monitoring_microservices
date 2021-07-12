@@ -52,7 +52,7 @@ def monitoring_with_ip_address(request, ipaddress):
 def monitoring(request):
     res = None
     if request.method == "GET":
-        res_mem = get_data_from_influx_db("mem_usage_percent", )
+        res_mem = get_data_from_influx_db("mem_usage_percent")
         res_cpu = get_data_from_influx_db("cpu_usage_percent")
 
         # here we merge both dictionnaries.
