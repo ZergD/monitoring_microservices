@@ -23,7 +23,6 @@ The configuration of InfluxDB follows this:
 * BUCKET = "monitoring"
 * URL_DB = "http://localhost:8086"
 
-
 ##### First launch - To launch server rest
 
 python manage.py runserver
@@ -106,6 +105,7 @@ what color the alert is. Orange. Red.
 ## Docker
 
 Docker information here
+Manque de temps pour setup tout le docker compose. Il marche "presque".
 
 To launch the influx db docker run -p 8086:8086 -v influxdb:/var/lib/influxdb2 influxdb
 
