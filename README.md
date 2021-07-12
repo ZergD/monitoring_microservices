@@ -4,6 +4,10 @@ A REST server with Django framework with multiple endpoints to save and get ress
 
 Developped with Python3.9 on Windows10. Tested only on Windows10. Should work on Linux though.
 
+## Getting Started
+
+This section is for quickly setting everything up and make it run.
+
 ## Microservices
 
 ### Microservice n°1: the ressource_usage_collector
@@ -47,7 +51,7 @@ http://127.0.0.1:8000/ressources-usage/get-all-detailed
 
 ## Get alarm
 
-http://127.0.0.1:8000/query-alarm/
+http://127.0.0.1:8000/ressources-usage/query-alarm/
 
 A GET request allows the client to know:
 what color the alert is. Orange. Red.
@@ -55,6 +59,20 @@ what color the alert is. Orange. Red.
 ## Docker
 
 Docker information here
+
+
+## Library Used
+* BDD=> influxDB
+Python client: library: influxdb-client
+
+* To create Python Daemon => https://pypi.org/project/python-daemon/
+
+* Pour faire les parametres -debug: https://github.com/pallets/click
+
+* Pour le logging: https://docs.python.org/3/library/logging.html
+
+* Pour avoir Cpu/Mem Usage: psutil
+
 
 ## Improvement / Optimization Ideas
 
@@ -66,6 +84,7 @@ While working on the project. Those are the ideas I put on the side because I ha
 * Create another microservice only dedicated for prediction ? Use Keras to build a predictive model and train it.
 * If the microservices can't connect to the REST server => raises ConnectionError and stop working. -> nothing was done
   for it try to reconnect after a couple of time.
+* Use SetupTools to package and create automatically a Docker image for the project ?  
 
 ### Optimizations Ideas:
 
