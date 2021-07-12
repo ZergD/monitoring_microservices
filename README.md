@@ -15,7 +15,7 @@ This section is for quickly setting everything up and make it run.
 Placed at the root of the project. The file "micro_service_ressource_usage_collector.py" acts like a "daemon". Launch it
 and it will:
 
-* Periodically gather memory_usage and cpu_usage in percent, per processes.
+* Periodically (default=10sec) gather memory_usage and cpu_usage in percent, per processes.
 * Send a PUT request with all gathered data to the monitoring_REST_server and the server saves the data in Influxdb.
 
 ### Microservice n°2: the ressource_usage_alarm
@@ -49,6 +49,14 @@ into a json.
 To get a **detailed usage value**, ie, with history values, without the mean computes there is another endpoint:
 http://127.0.0.1:8000/ressources-usage/get-all-detailed
 
+At the current moment it returns the list of all the measurements for a given process, for the mem_usage ressource.
+I stopped this feature here because it doesnt make much sense to have all those measurements. The get-all with 
+the mean compute is good.
+
+An exemple of the output is:
+{'AdAppMgrSvc.exe': [0.12842683941476413, 0.12847469737616335, 0.1279961177621713, 0.13799843169460493,
+0.13799843169460493, 0.13799843169460493, ... , 0.1386445141734942, 0.1386445141734942, 0.1386445141734942]}
+
 ## Get alarm
 
 http://127.0.0.1:8000/ressources-usage/query-alarm/
@@ -59,6 +67,9 @@ what color the alert is. Orange. Red.
 ## Docker
 
 Docker information here
+
+To launch the influx db
+docker run -p 8086:8086 -v influxdb:/var/lib/influxdb2 influxdb
 
 
 ## Library Used
@@ -73,6 +84,14 @@ Python client: library: influxdb-client
 
 * Pour avoir Cpu/Mem Usage: psutil
 
+Idees pour Executer des taches periodiques:
+* Celery beat => too heavy framework
+* Using time.sleep => too simple ? not robust enough ?
+* Using threading.Timer
+* Using threading.Event
+https://medium.com/greedygame-engineering/an-elegant-way-to-run-periodic-tasks-in-python-61b7c477b679
+* ==> timeloop lib for periodic tasks.
+
 
 ## Improvement / Optimization Ideas
 
@@ -80,11 +99,14 @@ While working on the project. Those are the ideas I put on the side because I ha
 
 ### Improvement Ideas:
 
+* The InfluxDB allows to clean DATA if the DATA history is > 2 days. Didnt have time to configure it.
+* At the current moment, I compute the mean manually. The Flux language allows to easily query the InfluxDB, and it 
+  allows to use "mean" fonction. But didnt have time to make it work. Hence why i did it manually at the moment.
 * The microservices are started/stopped manually. We could start/stop then with some network calls.
 * Create another microservice only dedicated for prediction ? Use Keras to build a predictive model and train it.
 * If the microservices can't connect to the REST server => raises ConnectionError and stop working. -> nothing was done
   for it try to reconnect after a couple of time.
-* Use SetupTools to package and create automatically a Docker image for the project ?  
+* Use SetupTools to package and create automatically a Docker image for the project ?
 
 ### Optimizations Ideas:
 
