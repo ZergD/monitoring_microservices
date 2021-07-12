@@ -185,6 +185,9 @@ def start_monitoring_all_processes_from_DB():
     # Compute some prediction. And based on those prediction.
     # loop through all of them, and if cpu_usage or mem_usage > 80%
     # Then => print message in AMBER this time.
+    # https://github.com/mziccard/pyscale
+    # A workload prediction library for Python. PyScale can be used to estimate future loads
+    # (in terms of traffic/CPU load/memory usage) of your web application/service to help you scale up/out proactively.h
     pass
 
 

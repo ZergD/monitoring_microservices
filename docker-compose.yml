@@ -4,9 +4,9 @@ services:
  
     web:
         build: .
-        command: python3 manage.py runserver 0.0.0.0:8000
+        command: python3 manage.py runserver 127.0.0.1:8000
         volumes:
-            - ./monitoring_tests:/usr/web/app
+            - .:/code
         ports:
             - "8000:8000"
         depends_on:
@@ -25,5 +25,7 @@ services:
             - DOCKER_INFLUXDB_INIT_USERNAME=admin
             - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
             - DOCKER_INFLUXDB_INIT_ORG=my-org
-            - DOCKER_INFLUXDB_INIT_BUCKET=my-bucket
+            - DOCKER_INFLUXDB_INIT_BUCKET=monitoring
+volumes:
+    influxdb-storage:
     
