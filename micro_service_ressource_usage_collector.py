@@ -15,43 +15,43 @@ import time
 import requests
 import os
 
-REST_API_ADDRESS = "http://127.0.0.1:8000/ressources-usage/"
+REST_API_ADDRESS = "http://127.0.0.1:8000/ressources-usage/save-all"
 
 tl = Timeloop()
 
 
-def test_with_influxdb():
-    """
-    This is a test function to remind myself Influxdb command lines.
-    :return:
-    """
-    # initialize the Client
-    token = "WaKfamDkoQH3xbcbJo221YouLyMyaWLfQwqObjXxtGVcednoNXqZ4HglpRS5JS_HueepINFfgBzCe1xzLcMT2A=="
-    org = "myorg"
-    bucket = "monitoring"
-    client = InfluxDBClient(url="http://localhost:8086", token=token)
-
-    # lets write data
-    write_api = client.write_api(write_options=SYNCHRONOUS)
-
-    data = "mem,host=host1 used_percent=23.43234543"
-    # write_api.write(bucket, org, data)
-
-    point = Point("mem") \
-        .tag("host", "host1") \
-        .field("used_percent", 23.43234543) \
-        .time(datetime.utcnow(), WritePrecision.NS)
-
-    write_api.write(bucket, org, point)
-
-    p2 = Point("cpu_usage_percent").tag("ip", "192.188.1.1").tag("process", "processname1").field("value", 25.3)
-    write_api.write(bucket, org, p2)
-
-    print("writing to InfluxDB...")
-
-    # every 10sec pull all data
-    # transform them into correct format
-    # send PUT request
+# def test_with_influxdb():
+#     """
+#     This is a test function to remind myself Influxdb command lines.
+#     :return:
+#     """
+#     # initialize the Client
+#     token = "WaKfamDkoQH3xbcbJo221YouLyMyaWLfQwqObjXxtGVcednoNXqZ4HglpRS5JS_HueepINFfgBzCe1xzLcMT2A=="
+#     org = "myorg"
+#     bucket = "monitoring"
+#     client = InfluxDBClient(url="http://localhost:8086", token=token)
+#
+#     # lets write data
+#     write_api = client.write_api(write_options=SYNCHRONOUS)
+#
+#     data = "mem,host=host1 used_percent=23.43234543"
+#     # write_api.write(bucket, org, data)
+#
+#     point = Point("mem") \
+#         .tag("host", "host1") \
+#         .field("used_percent", 23.43234543) \
+#         .time(datetime.utcnow(), WritePrecision.NS)
+#
+#     write_api.write(bucket, org, point)
+#
+#     p2 = Point("cpu_usage_percent").tag("ip", "192.188.1.1").tag("process", "processname1").field("value", 25.3)
+#     write_api.write(bucket, org, p2)
+#
+#     print("writing to InfluxDB...")
+#
+#     # every 10sec pull all data
+#     # transform them into correct format
+#     # send PUT request
 
 
 @click.command()
@@ -100,43 +100,47 @@ def start_monitoring_specific_processes():
     # cpu or mem
     type_data = None
 
-    print("Starting... start_monitoring_specific_processes...")
-    for pid in psutil.pids():
-        p = psutil.Process(pid)
-        if p.name() == "chrome.exe":
-            mem_value = p.memory_percent()
-            cpu_value = p.cpu_percent()
-            process_name = p.name()
-            txt_to_display_mem = "Process: [{}] has a memory usage of: [{}]".format(p.name(), p.memory_percent())
-            txt_to_display_cpu = "Process: [{}] has a cpu usage of: [{}]".format(p.name(), p.cpu_percent())
-            print(txt_to_display_mem)
-            print(txt_to_display_cpu)
-            print("--------------------------------------------------------------------------")
-            break
-
-    unix_timestamp = time.time()
-
-    # construct the payload/JSON format, First you Dict then smooth transform into JSON
-    payload_mem = {
-        "timestamp": unix_timestamp,
-        "value": mem_value,
-        "process_name": process_name,
-        "type_data": "mem"
-    }
-
-    payload_cpu = {
-        "timestamp": unix_timestamp,
-        "value": cpu_value,
-        "process_name": process_name,
-        "type_data": "cpu"
-    }
-
     payload = {
         "data": []
     }
 
-    payload["data"].append(payload_cpu)
-    payload["data"].append(payload_mem)
+    print("Starting... start_monitoring_specific_processes...")
+    for pid in psutil.pids():
+        try:
+            p = psutil.Process(pid)
+        # sometimes a process comes and goes away. Needed to avoid errors
+        except:
+            continue
+
+        # if p.name() == "chrome.exe":
+        mem_value = p.memory_percent()
+        cpu_value = p.cpu_percent()
+        process_name = p.name()
+        txt_to_display_mem = "Process: [{}] has a memory usage of: [{}]".format(p.name(), p.memory_percent())
+        txt_to_display_cpu = "Process: [{}] has a cpu usage of: [{}]".format(p.name(), p.cpu_percent())
+        print(txt_to_display_mem)
+        print(txt_to_display_cpu)
+        print("--------------------------------------------------------------------------")
+
+        unix_timestamp = time.time()
+
+        # construct the payload/JSON format, First you Dict then smooth transform into JSON
+        payload_mem = {
+            "timestamp": unix_timestamp,
+            "value": mem_value,
+            "process_name": process_name,
+            "type_data": "mem"
+        }
+
+        payload_cpu = {
+            "timestamp": unix_timestamp,
+            "value": cpu_value,
+            "process_name": process_name,
+            "type_data": "cpu"
+        }
+
+        payload["data"].append(payload_mem)
+        payload["data"].append(payload_cpu)
 
     response = requests.put(REST_API_ADDRESS, json=payload)
     print("Response: ", response)
