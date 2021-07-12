@@ -28,8 +28,7 @@ URL_DB = "http://localhost:8086"
 
 @api_view(['GET'])
 def monitoring(request):
-    res = "Hello"
-
+    res = None
     if request.method == "GET":
         res_mem = get_data_from_influx_db("mem_usage_percent")
         res_cpu = get_data_from_influx_db("cpu_usage_percent")
@@ -43,7 +42,7 @@ def monitoring(request):
     return Response(json.dumps(res), status=status.HTTP_200_OK)
 
 
-def get_data_from_influx_db(measurement_filter: str) -> json:
+def get_data_from_influx_db(measurement_filter: str, detail_flag=False) -> json:
     """
     This function queries the DB.
     Gathers, computes the mean of all values, and sorts all results
@@ -61,7 +60,7 @@ def get_data_from_influx_db(measurement_filter: str) -> json:
     client = InfluxDBClient(url="http://localhost:8086", token=token)
 
     query = f'from (bucket: "monitoring")' \
-            f' |> range(start: -3h, stop: now())' \
+            f' |> range(start: -5m, stop: now())' \
             f' |> filter(fn: (r) => r._measurement == "{measurement_filter}")' \
             f' |> group(columns: ["process"])'
     print(query)
@@ -95,14 +94,17 @@ def get_data_from_influx_db(measurement_filter: str) -> json:
     dict_mean_results = {}
     for elem in dict_results.keys():
         if elem not in dict_mean_results.keys():
-            dict_mean_results[elem] = mean(dict_results[elem])
+            if detail_flag:
+                dict_mean_results[elem] = dict_results[elem]
+            else:
+                dict_mean_results[elem] = mean(dict_results[elem])
 
     # final mean results
     # print("Final mean results by processes")
     # pprint.pprint(dict_mean_results)
 
     # here we sort the dictionnary by value in ascending order
-    sorted_final_dict_results = sorted(dict_mean_results.items(), key=operator.itemgetter(1))
+    # sorted_final_dict_results = sorted(dict_mean_results.items(), key=operator.itemgetter(1))
 
     # print("Final SORTED mean results by processes")
     # pprint.pprint(sorted_final_dict_results)
@@ -115,6 +117,7 @@ def get_data_from_influx_db(measurement_filter: str) -> json:
     # return sorted_final_dict_results
 
     return dict_mean_results
+
 
 @api_view(['PUT'])
 def save_data_to_influxdb(request):
@@ -158,7 +161,7 @@ def prepare_and_send_data_to_influxdb(json_data: dict, debug=False):
             raise TypeError
 
         point = Point(point_name) \
-            .tag("ip", "192.188.1.1") \
+            .tag("ip", json_data["ipaddress"]) \
             .tag("process", process_name) \
             .field("value", value) \
             .time(datetime.utcfromtimestamp(timestamp), WritePrecision.NS)
@@ -169,3 +172,23 @@ def prepare_and_send_data_to_influxdb(json_data: dict, debug=False):
                                                                  process_name, type_data, value))
 
     print("writing to InfluxDB...")
+
+
+@api_view(['GET'])
+def monitoring_with_details(request):
+    print("We are in monitoring_with_details")
+    res = None
+    res_mem = None
+    if request.method == "GET":
+        res_mem = get_data_from_influx_db("mem_usage_percent", detail_flag=True)
+        print(res_mem)
+        # res_cpu = get_data_from_influx_db("cpu_usage_percent", detail_flag=True)
+
+        # here we merge both dictionnaries.
+        # res = defaultdict(list)
+        # for d in (res_mem, res_cpu):
+        #     for key, value in d.items():
+        #         res[key].append(value)
+
+    return Response(res_mem, status=status.HTTP_200_OK)
+

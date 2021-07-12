@@ -13,6 +13,7 @@ import click
 import psutil
 import time
 import requests
+import socket
 import os
 
 REST_API_ADDRESS = "http://127.0.0.1:8000/ressources-usage/save-all"
@@ -141,6 +142,11 @@ def start_monitoring_specific_processes():
 
         payload["data"].append(payload_mem)
         payload["data"].append(payload_cpu)
+        try:
+            ipaddress = socket.gethostbyname("www.google.com")
+        except:
+            ipaddress = "0.0.0.0"
+        payload["ipaddress"] = str(ipaddress)
 
     response = requests.put(REST_API_ADDRESS, json=payload)
     print("Response: ", response)

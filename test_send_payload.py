@@ -14,8 +14,15 @@ def test_get_ressources_usage():
 
     json_response = response.json()
     pprint.pprint(json_response)
-    # for elem in json_response:
-    #     print(elem)
+
+
+def test_get_ressources_usage_detailed():
+    response = requests.get("http://127.0.0.1:8000/ressources-usage/get-all-detailed")
+    print(response)
+    print("------------------")
+
+    json_response = response.json()
+    pprint.pprint(json_response)
 
 
 def test_get_data_from_influxdb_old():
@@ -158,5 +165,4 @@ def test_get_data_from_influxdb(measurement_filter: str):
 # test_get_data_from_influxdb("cpu_usage_percent")
 
 test_get_ressources_usage()
-
-
+# test_get_ressources_usage_detailed()
